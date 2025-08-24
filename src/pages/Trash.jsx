@@ -74,7 +74,9 @@ export default function Trash() {
       data: { session },
     } = await supabase.auth.getSession();
     const itemType = item.type;
-
+    const truncateForToast = (name) => {
+      return name.length > 25 ? name.substring(0, 25) + "..." : name;
+    };
     try {
       await newRequest.post(
         `/files/${itemType}/${item.id}/restore`,
@@ -83,7 +85,7 @@ export default function Trash() {
           headers: { Authorization: `Bearer ${session.access_token}` },
         }
       );
-      toast.success(`"${item.name}" restored successfully.`);
+      toast.success(`"${truncateForToast(item.name)}" restored successfully.`);
       fetchTrashedItems();
     } catch (error) {
       toast.error(`Error: ${error.response?.data?.error || error.message}`);
