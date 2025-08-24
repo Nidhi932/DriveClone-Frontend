@@ -1,67 +1,127 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { FileIcon, formatBytes } from "../utils/helpers.jsx";
-import toast from "react-hot-toast";
 import newRequest from "../utils/newRequest";
+import toast from "react-hot-toast";
 
-// Confirmation Modal Component
-const ConfirmDeleteModal = ({ item, onClose, onDelete }) => {
-  if (!item) return null;
+// File Preview Modal (same as updated version)
+const FilePreviewModal = ({ file, onClose }) => {
+  if (!file || !file.url) return null;
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(file.url);
+      if (!response.ok) throw new Error("Network response was not ok");
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error("Could not download the file.");
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-gray-100">
-        <div className="p-6 text-center">
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-6 h-6 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col border border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+          <div className="flex items-center min-w-0 flex-1">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+              <svg
+                className="w-5 h-5 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <h3 className="font-medium text-gray-900 truncate">{file.name}</h3>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Delete forever?
-          </h3>
-          <p className="text-gray-500 mb-6">
-            <span className="font-medium text-gray-700">"{item.name}"</span>{" "}
-            will be deleted forever. This can't be undone.
-          </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
+            <button
+              onClick={handleDownload}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Download"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 10v6m0 0l-4-4m4 4l4-4m6-8V4a2 2 0 00-2-2H8a2 2 0 00-2 2v4m20 4H4"
+                />
+              </svg>
+            </button>
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Close"
             >
-              Cancel
-            </button>
-            <button
-              onClick={() => onDelete(item)}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-            >
-              Delete forever
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </button>
           </div>
+        </div>
+        <div className="flex-1 overflow-auto bg-gray-50">
+          {file.type.startsWith("image/") ? (
+            <div className="h-full flex items-center justify-center p-4">
+              <img
+                src={file.url}
+                alt="File preview"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+              />
+            </div>
+          ) : (
+            <iframe
+              src={file.url}
+              title="File preview"
+              className="w-full h-full border-0"
+            ></iframe>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default function Trash() {
-  const [trashedItems, setTrashedItems] = useState([]);
+export default function Shared() {
+  const [sharedItems, setSharedItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [itemToDelete, setItemToDelete] = useState(null);
+  const [previewFile, setPreviewFile] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const fetchTrashedItems = useCallback(async () => {
+  const fetchSharedItems = useCallback(async () => {
     setLoading(true);
     const {
       data: { session },
@@ -72,59 +132,50 @@ export default function Trash() {
     }
 
     try {
-      const response = await newRequest.get("/files/trash", {
+      const response = await newRequest.get("/files/shared-with-me", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      setTrashedItems(response.data);
+      setSharedItems(response.data);
     } catch (error) {
-      console.error("Error fetching trash:", error);
-      toast.error("Could not load trash items.");
+      console.error("Error fetching shared files:", error);
+      toast.error("Could not load shared files.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchTrashedItems();
-  }, [fetchTrashedItems]);
+    fetchSharedItems();
+  }, [fetchSharedItems]);
 
-  const handleRestore = async (item) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const itemType = item.type;
-
-    try {
-      await newRequest.post(
-        `/files/${itemType}/${item.id}/restore`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        }
-      );
-      toast.success(`"${item.name}" restored successfully.`);
-      fetchTrashedItems();
-    } catch (error) {
-      toast.error(`Error: ${error.response?.data?.error || error.message}`);
+  const handleItemClick = async (item) => {
+    if (item.type === "folder") {
+      navigate("/", { state: { initialFolder: item } });
+      return;
     }
-  };
 
-  const handlePermanentDelete = async (item) => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    const itemType = item.type;
+    if (!session) {
+      toast.error("You need to be logged in.");
+      return;
+    }
 
     try {
-      await newRequest.delete(`/files/${itemType}/${item.id}/permanent`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+      const response = await newRequest.post(
+        "/files/signed-url",
+        { path: item.storage_path },
+        { headers: { Authorization: `Bearer ${session.access_token}` } }
+      );
+      setPreviewFile({
+        url: response.data.signedUrl,
+        type: item.file_type,
+        name: item.name,
       });
-      setItemToDelete(null);
-      toast.success(`"${item.name}" permanently deleted.`);
-      fetchTrashedItems();
     } catch (error) {
-      console.error("Permanent delete error:", error);
-      toast.error(`Error: ${error.response?.data?.error || error.message}`);
+      console.error("Error getting signed URL:", error);
+      toast.error("Could not open file.");
     }
   };
 
@@ -140,30 +191,35 @@ export default function Trash() {
         <div className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-5xl">
             <div className="mb-6">
-              <h1 className="text-2xl font-semibold text-gray-900">Trash</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Shared with me
+              </h1>
               <p className="text-gray-600 mt-1">
-                Items you've deleted are stored here for 30 days
+                Files and folders that others have shared with you
               </p>
             </div>
 
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
-                <span className="ml-3 text-gray-600">Loading trash...</span>
+                <span className="ml-3 text-gray-600">
+                  Loading shared files...
+                </span>
               </div>
-            ) : trashedItems.length > 0 ? (
+            ) : sharedItems.length > 0 ? (
               <div className="bg-white rounded-xl border border-gray-200">
                 <div className="divide-y divide-gray-100">
-                  {trashedItems.map((item) => (
+                  {sharedItems.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center p-4 hover:bg-gray-50 transition-colors"
+                      onClick={() => handleItemClick(item)}
+                      className="flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <div className="flex-shrink-0 mr-4">
                         {item.type === "folder" ? (
-                          <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                             <svg
-                              className="w-6 h-6 text-gray-500"
+                              className="w-6 h-6 text-blue-600"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -177,58 +233,33 @@ export default function Trash() {
                             </svg>
                           </div>
                         ) : (
-                          <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
                             <FileIcon type={item.file_type} size="w-6 h-6" />
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-700 truncate">
+                        <h3 className="font-medium text-gray-900 truncate">
                           {item.name}
                         </h3>
                         <p className="text-sm text-gray-500">
                           {formatBytes(item.size)}
                         </p>
                       </div>
-                      <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-                        <button
-                          onClick={() => handleRestore(item)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Restore"
+                      <div className="flex-shrink-0 ml-4">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => setItemToDelete(item)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete permanently"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
                       </div>
                     </div>
                   ))}
@@ -247,26 +278,25 @@ export default function Trash() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                     />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  Trash is empty
+                  No shared files
                 </h3>
                 <p className="text-gray-500">
-                  Items you delete will appear here
+                  Files and folders shared with you will appear here
                 </p>
               </div>
             )}
           </div>
         </div>
       </main>
-      {itemToDelete && (
-        <ConfirmDeleteModal
-          item={itemToDelete}
-          onClose={() => setItemToDelete(null)}
-          onDelete={handlePermanentDelete}
+      {previewFile && (
+        <FilePreviewModal
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
         />
       )}
     </div>
