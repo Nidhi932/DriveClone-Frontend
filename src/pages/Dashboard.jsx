@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from "./CloudMate-Frontend/src/supabase";
+import { supabase } from "../supabase";
 import { useDropzone } from "react-dropzone";
 import toast from "react-hot-toast";
-import newRequest from "./CloudMate-Frontend/src/utils/newRequest";
+import newRequest from "../utils/newRequest";
 
 // Import components
-import Sidebar from "./CloudMate-Frontend/src/components/Sidebar";
-import Header from "./Header";
-import Breadcrumbs from "./Breadcrumbs";
-import FileGrid from "./FileGrid";
-import FileListComponent from "./FileListComponent";
-import EmptyStateDropzone from "./EmptyStateDropzone";
-import NewFolderModal from "./NewFolderModal";
-import FilePreviewModal from "./FilePreviewModal";
-import ShareModal from "./ShareModal";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
+import Breadcrumbs from "../components/Breadcrumbs";
+import FileGrid from "../components/FileGrid";
+import FileListComponent from "../components/FileListComponent";
+import EmptyStateDropzone from "../components/EmptyStateDropzone";
+import NewFolderModal from "../components/NewFolderModal";
+import FilePreviewModal from "../components/FilePreviewModal";
+import ShareModal from "../components/ShareModal";
 
 // Confirm Delete Modal with updated design
 const ConfirmDeleteModal = ({ item, onClose, onDelete }) => {
