@@ -57,17 +57,21 @@ export default function FilePreviewModal({ file, onClose }) {
               title="Download"
             >
               <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                width="25"
+                height="25"
+                id="download"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 10v6m0 0l-4-4m4 4l4-4m6-8V4a2 2 0 00-2-2H8a2 2 0 00-2 2v4m20 4H4"
-                />
+                <g
+                  fill="none"
+                  fill-rule="evenodd"
+                  stroke="#4a5565"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                >
+                  <path d="M1 16v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3M6 11l4 4 4-4M10 1v14"></path>
+                </g>
               </svg>
             </button>
 
@@ -77,7 +81,7 @@ export default function FilePreviewModal({ file, onClose }) {
               title="Close"
             >
               <svg
-                className="w-5 h-5"
+                className="w-7 h-7"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -85,7 +89,7 @@ export default function FilePreviewModal({ file, onClose }) {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth="2"
+                  strokeWidth="1.5"
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
