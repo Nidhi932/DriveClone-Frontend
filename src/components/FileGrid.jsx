@@ -208,7 +208,7 @@ export default function FileGrid({
                 />
               </form>
             ) : (
-              <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-5">
+              <h3 className="text-sm font-medium text-gray-900 line-clamp-2 truncate leading-5">
                 {item.name}
               </h3>
             )}

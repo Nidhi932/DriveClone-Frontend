@@ -43,8 +43,11 @@ const ConfirmDeleteModal = ({ item, onClose, onDelete }) => {
           </h3>
           <p className="text-gray-500 mb-6">
             Are you sure you want to move{" "}
-            <span className="font-medium text-gray-700">"{item.name}"</span> to
-            the trash?
+            <span className="font-medium text-gray-700 truncate inline-block max-w-xs">
+              "{item.name}"
+            </span>
+            <br />
+            to the trash?
           </p>
           <div className="flex gap-3 justify-center">
             <button
@@ -190,6 +193,9 @@ export default function Dashboard() {
       data: { session },
     } = await supabase.auth.getSession();
     const itemType = item.type;
+    const truncateForToast = (name) => {
+      return name.length > 25 ? name.substring(0, 25) + "..." : name;
+    };
     try {
       await newRequest.post(
         `/files/${itemType}/${item.id}/trash`,
@@ -199,7 +205,7 @@ export default function Dashboard() {
         }
       );
       setItemToDelete(null);
-      toast.success(`"${item.name}" moved to trash.`);
+      toast.success(`"${truncateForToast(item.name)}" moved to trash.`);
       fetchContents(currentFolderId, searchTerm);
     } catch (error) {
       toast.error(`Error: ${error.response?.data?.error || error.message}`);
